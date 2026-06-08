@@ -14,12 +14,23 @@ class Message:
 class StopReason(Enum):
     END_TURN = "end_turn"
     MAX_TOKENS = "max_tokens"
-
+    
+class EventType(Enum):
+    MESSAGE_START = "message_start"
+    TEXT_DELTA = "text_delta"
+    MESSAGE_STOP = "message_stop"
+    ERROR = "error"
+    
 @dataclass
 class ChatResponse:
     text: str
     stop_reason: StopReason
     usage: dict = field(default_factory=dict)
+    
+@dataclass
+class StreamEvent:
+    type: EventType
+    text: str | None = None 
     
 @dataclass
 class ChatOptions:

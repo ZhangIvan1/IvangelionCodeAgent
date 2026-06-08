@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from platform import system
+from typing import AsyncIterator
 
 from openai import AsyncOpenAI
 
-from .types import ChatOptions, ChatResponse, Message, StopReason
+from .types import ChatOptions, ChatResponse, Message, StopReason, StreamEvent, EventType
 
 
 @dataclass
@@ -17,7 +17,7 @@ class OpenAICompatibleProvider:
     
     def __init__(self, config: OpenAICompatibleConfig) -> None:
         self._client = AsyncOpenAI(api_key=config.api_key, base_url=config.base_url)
-        self.model = config.model
+        self._model = config.model
         
     def _format_messages(self, messages: list[Message], system: str) -> list[dict]:
         formatted_messages: list[dict] = []
@@ -31,7 +31,7 @@ class OpenAICompatibleProvider:
         options = options or ChatOptions()
         
         response = await self._client.chat.completions.create(
-            model=self.model,
+            model=self._model,
             max_tokens=options.max_tokens or 4096,
             messages=self._format_messages(messages, options.system),
         )
@@ -52,3 +52,21 @@ class OpenAICompatibleProvider:
             }
         )
         
+    async def stream(self, messages: list[Message], options: ChatOptions | None = None) -> AsyncIterator[StreamEvent]:
+        options = options or ChatOptions()
+        
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            max_tokens=options.max_tokens or 4096,
+            messages=self._format_messages(messages, options.system),
+            stream=True,
+        )
+        
+        yield StreamEvent(type=EventType.MESSAGE_START)
+        
+        async for chuck in response:
+            delta = chuck.choices[0].delta if chuck.choices else None
+            if delta and delta.content:
+                yield StreamEvent(type=EventType.TEXT_DELTA, text=delta.content)
+                
+        yield StreamEvent(type=EventType.MESSAGE_STOP)

@@ -1,9 +1,11 @@
 from dataclasses import dataclass
+from typing import Any, AsyncIterator
 
 from anthropic import AsyncAnthropic
 from anthropic.types import stop_reason
 
-from .types import ChatOptions, ChatResponse, Message, StopReason
+from llm.types import StreamEvent, EventType
+from .types import ChatOptions, ChatResponse, Message, StopReason, StreamEvent
 
 
 @dataclass
@@ -52,3 +54,28 @@ class AnthropicProvider:
                                 "output_tokens": response.usage.output_tokens,
                             })
         
+    async def stream(self, messages: list[Message], options: ChatOptions | None = None) -> AsyncIterator[StreamEvent]:
+        options = options or ChatOptions()
+
+        params: dict = {
+            "model": self.model,
+            "max_tokens": options.max_tokens,
+            "messages": [
+                {
+                    "role": m.role,
+                    "content": m.content
+                } for m in messages
+            ],
+        }
+
+        if options.system:
+            params["system"] = options.system
+
+        yield StreamEvent(type=EventType.MESSAGE_START)
+        
+        async with self._client.messages.stream(**params) as stream:
+            async for event in stream:
+                if event.type == "content_block_delta" and event.delta.type == "text_delta":
+                    yield StreamEvent(type=EventType.TEXT_DELTA, text=event.delta.text)
+                    
+        yield StreamEvent(type=EventType.MESSAGE_STOP)
