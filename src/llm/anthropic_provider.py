@@ -13,7 +13,7 @@ class AnthropicConfig:
 
 class AnthropicProvider:
     def __init__(self, config: AnthropicConfig) -> None:
-        self.api_key = AsyncAnthropic(api_key=config.api_key)
+        self._client = AsyncAnthropic(api_key=config.api_key)
         self.model = config.model
         
     async def chat(self, messages: list[Message], options: ChatOptions | None = None) -> ChatResponse:
@@ -33,7 +33,7 @@ class AnthropicProvider:
         if options.system:
             params["system"] = options.system
             
-        response = await self.api_key.messages.create(**params)
+        response = await self._client.messages.create(**params)
         
         text = "".join(
             b.text for b in response.content if b.type == "text"

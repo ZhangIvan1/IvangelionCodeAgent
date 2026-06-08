@@ -20,7 +20,7 @@ def create_provider(config: ProviderConfig):
             )
         )
     
-    if config.provider == "openai":
+    if config.provider == "openai-compatible":
         if not config.base_url:
             raise ValueError("OpenAI provider requires a base_url")
         if not config.model:
@@ -33,4 +33,4 @@ def create_provider(config: ProviderConfig):
             )
         )
     
-    raise ValueError(f"Unsupported provider: {config.provider}")
+    raise ValueError(f"Unknown provider: {config.provider}")
