@@ -14,11 +14,11 @@ class MessageHistory:
     def add_assistant(self, content: str) -> None:
         self._messages.append(Message(role="assistant", content=content))
         
-    def get_messages(self) -> list[Message] | None:
-        return list(self._messages) if self._messages else None
+    def get_messages(self) -> list[Message]:
+        return list(self._messages)
     
-    def get_last_n(self, n: int) -> list[Message] | None:
-        return list(self._messages[-n:]) if len(self._messages) >= n else None
+    def get_last_n(self, n: int) -> list[Message]:
+        return list(self._messages[-n:])
     
     def get_last_message(self) -> Message | None:
         return self._messages[-1] if self._messages else None
