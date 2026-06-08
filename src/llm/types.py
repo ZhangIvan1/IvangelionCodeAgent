@@ -5,6 +5,8 @@ from enum import Enum
 
 from typing import Protocol
 
+from pygments.lexers import felix
+
 
 @dataclass
 class Message:
@@ -36,6 +38,12 @@ class StreamEvent:
 class ChatOptions:
     system: str | None = None
     max_tokens: int | None = None
+    
+@dataclass
+class Tool:
+    name: str
+    description: str
+    input_schema: dict = field(default_factory=dict)
     
     
 class LLMProvider(Protocol):
