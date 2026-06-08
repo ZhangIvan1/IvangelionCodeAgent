@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 
 from typing import Protocol
 
@@ -9,11 +10,15 @@ from typing import Protocol
 class Message:
     role: str
     content: str
+    
+class StopReason(Enum):
+    END_TURN = "end_turn"
+    MAX_TOKENS = "max_tokens"
 
 @dataclass
 class ChatResponse:
     text: str
-    stop_reason: str   ## "end_turn" or "max_tokens"
+    stop_reason: StopReason
     usage: dict = field(default_factory=dict)
     
 @dataclass
