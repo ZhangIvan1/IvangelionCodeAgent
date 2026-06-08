@@ -12,7 +12,7 @@ class AnthropicConfig:
     model: str = 'claude-sonnet-4.6'
 
 class AnthropicProvider:
-    def __init__(self, config: AnthropicConfig):
+    def __init__(self, config: AnthropicConfig) -> None:
         self.api_key = AsyncAnthropic(api_key=config.api_key)
         self.model = config.model
         
@@ -41,7 +41,7 @@ class AnthropicProvider:
         
         stop_reason = (
             StopReason.END_TURN 
-            if response.stop_reason == StopReason.END_TURN 
+            if response.stop_reason == "end_turn" 
             else StopReason.MAX_TOKENS
         )
         
