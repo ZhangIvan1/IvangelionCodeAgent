@@ -45,6 +45,27 @@ class Tool:
     description: str
     input_schema: dict = field(default_factory=dict)
     
+
+@dataclass
+class TextBlock:
+    type: str = "text"
+    text: str = ""
+    
+@dataclass
+class ToolUseBlock:
+    type: str = "tool_use"
+    id: str = ""
+    name: str = ""
+    input: dict = field(default_factory=dict)
+    
+@dataclass
+class ToolResultBlock:
+    type: str = "tool_result"
+    tool_use_id: str = ""
+    content: str = ""
+    is_error: bool = False
+    
+ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock
     
 class LLMProvider(Protocol):
     async def chat(self, messages: list[Message], options: ChatOptions | None = None) -> ChatResponse:
