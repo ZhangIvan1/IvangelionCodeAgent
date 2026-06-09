@@ -1,12 +1,10 @@
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
-from unittest import result
 
 from anthropic import AsyncAnthropic
-from anthropic.types import stop_reason, content_block, ToolUseBlock, TextBlock
 
 from llm.types import StreamEvent, EventType
-from .types import ChatOptions, ChatResponse, Message, StopReason, StreamEvent
+from .types import ChatOptions, ChatResponse, Message, StopReason, StreamEvent, TextBlock, ToolUseBlock
 
 
 @dataclass
@@ -87,14 +85,16 @@ class AnthropicProvider:
             b.text for b in response.content if b.type == "text"
         )
         
-        stop_reason = (
-            StopReason.END_TURN 
-            if response.stop_reason == "end_turn" 
-            else StopReason.MAX_TOKENS
-        )
+        if response.stop_reason == "end_turn":
+            stop_reason = StopReason.END_TURN
+        elif response.stop_reason == "tool_use":
+            stop_reason = StopReason.TOOL_USE
+        else:
+            stop_reason = StopReason.MAX_TOKENS
         
         return ChatResponse(text=text, 
                             stop_reason=stop_reason, 
+                            content=content_blocks,
                             usage={
                                 "input_tokens": response.usage.input_tokens,
                                 "output_tokens": response.usage.output_tokens,

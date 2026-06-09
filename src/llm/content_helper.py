@@ -7,7 +7,7 @@ def extract_text(content: list[ContentBlock]) -> str:
 def extract_tool_uses(content: list[ContentBlock]) -> list[ToolUseBlock]:
     return [ block for block in content if isinstance(block, ToolUseBlock) ]
     
-def create_tool_result_block(tool_use_id: str, content: str, is_error: bool = False) -> ToolResultBlock:
+def create_tool_result(tool_use_id: str, content: str, is_error: bool = False) -> ToolResultBlock:
     return ToolResultBlock(
         tool_use_id=tool_use_id,
         content=content,

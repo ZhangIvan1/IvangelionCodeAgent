@@ -2,10 +2,9 @@ import json
 from dataclasses import dataclass
 from typing import AsyncIterator
 
-from anthropic.types import TextBlock, ToolUseBlock
 from openai import AsyncOpenAI
 
-from .types import ChatOptions, ChatResponse, Message, StopReason, StreamEvent, EventType
+from .types import ChatOptions, ChatResponse, Message, StopReason, StreamEvent, EventType, TextBlock, ToolUseBlock
 
 
 @dataclass
@@ -32,7 +31,7 @@ class OpenAICompatibleProvider:
                 
             if message.role == "assistant":
                 text_parts = [ part for part in message.content if part.type == "text" ]
-                msg = {"role": "assistant", "content": "".join(text_parts)}
+                msg = {"role": "assistant", "content": "".join(part.text for part in text_parts)}
                 
                 tool_uses = [ part for part in message.content if part.type == "tool_use" ]
                 if tool_uses:

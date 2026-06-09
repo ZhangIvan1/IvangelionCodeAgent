@@ -26,6 +26,7 @@ class EventType(Enum):
 class ChatResponse:
     text: str
     stop_reason: StopReason
+    content: list = field(default_factory=list)
     usage: dict = field(default_factory=dict)
     
 @dataclass
