@@ -5,8 +5,6 @@ from enum import Enum
 
 from typing import Protocol
 
-from pygments.lexers import felix
-
 
 @dataclass
 class Message:
@@ -15,6 +13,7 @@ class Message:
     
 class StopReason(Enum):
     END_TURN = "end_turn"
+    TOOL_USE = "tool_use"
     MAX_TOKENS = "max_tokens"
     
 class EventType(Enum):
@@ -38,6 +37,7 @@ class StreamEvent:
 class ChatOptions:
     system: str | None = None
     max_tokens: int | None = None
+    tools: list[Tool] | None = None
     
 @dataclass
 class Tool:

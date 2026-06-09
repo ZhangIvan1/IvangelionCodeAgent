@@ -1,6 +1,8 @@
+import json
 from dataclasses import dataclass
 from typing import AsyncIterator
 
+from anthropic.types import TextBlock, ToolUseBlock
 from openai import AsyncOpenAI
 
 from .types import ChatOptions, ChatResponse, Message, StopReason, StreamEvent, EventType
@@ -24,26 +26,92 @@ class OpenAICompatibleProvider:
         if system:
             formatted_messages.append({"role": "system", "content": system})
         for message in messages:
-            formatted_messages.append({"role": message.role, "content": message.content})
+            if isinstance(message.content, str):
+                formatted_messages.append({"role": message.role, "content": message.content})
+                continue
+                
+            if message.role == "assistant":
+                text_parts = [ part for part in message.content if part.type == "text" ]
+                msg = {"role": "assistant", "content": "".join(text_parts)}
+                
+                tool_uses = [ part for part in message.content if part.type == "tool_use" ]
+                if tool_uses:
+                    msg["tool_calls"] = [
+                        {
+                            "id": tool_use.id,
+                            "type": "function",
+                            "function": {
+                                "name": tool_use.name,
+                                "arguments": json.dumps(tool_use.input),
+                            },
+                        }
+                        for tool_use in tool_uses
+                    ]
+                formatted_messages.append(msg)
+                
+            else:
+                for block in message.content:
+                    if block.type == "tool_result":
+                        formatted_messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": block.tool_use_id,
+                                "content": block.content,
+                            }
+                        )
+
         return formatted_messages
     
     async def chat(self, messages: list[Message], options: ChatOptions | None = None) -> ChatResponse:
         options = options or ChatOptions()
         
+        params: dict = {
+            "model": self._model,
+            "max_tokens": options.max_tokens or 4096,
+            "messages": self._format_messages(messages, options.system),
+        }
+        
+        if options.tools:
+            params["tools"] = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "parameters": tool.input_schema,
+                    }
+                }
+                for tool in options.tools
+            ]
+        
         response = await self._client.chat.completions.create(
-            model=self._model,
-            max_tokens=options.max_tokens or 4096,
-            messages=self._format_messages(messages, options.system),
+            **params
         )
         
         choice = response.choices[0]
-        stop_reason = (
-            StopReason.END_TURN 
-            if choice.finish_reason == "stop" 
-            else StopReason.MAX_TOKENS
-        )
+        
+        content_blocks = []
+        if choice.message.content:
+            content_blocks.append(TextBlock(text=choice.message.content))
+        if choice.message.tool_calls:
+            for tool_call in choice.message.tool_calls:
+                content_blocks.append(
+                    ToolUseBlock(
+                        id=tool_call.id,
+                        name=tool_call.function.name,
+                        input=json.loads(tool_call.function.arguments),
+                    )
+                )
+        
+        if choice.finish_reason == "stop":
+            stop_reason = StopReason.END_TURN
+        elif choice.finish_reason == "tool_calls":
+            stop_reason = StopReason.TOOL_USE
+        else:
+            stop_reason = StopReason.MAX_TOKENS
         
         return ChatResponse(
+            content=content_blocks,
             text=choice.message.content or "",
             stop_reason=stop_reason,
             usage={
