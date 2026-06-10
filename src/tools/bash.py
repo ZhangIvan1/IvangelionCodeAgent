@@ -75,7 +75,8 @@ async def execute_bash_tool(input: BashToolInput) -> str:
         parts.append(f"STDERR:\n{_truncate_output(stderr)}")
     
     if process.returncode != 0:
-        raise ValueError(f"Error: Failed to execute command {command}: Exit code {process.returncode}")
+        detail = f"\n{_truncate_output(stderr)}" if stderr else ""
+        raise ValueError(f"Error: Failed to execute command {command}: Exit code {process.returncode}{detail}")
     
     return "\n".join(parts) or "(no output)"
     
