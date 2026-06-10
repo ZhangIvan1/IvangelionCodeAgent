@@ -75,8 +75,7 @@ def execute_write_tool(input: WriteToolInput) -> str:
     
     lines = len(content.split("\n"))
     if old_content is None:
-        return f"Write: {file_path} with {lines} lines"
-    
+        return f"Created: {file_path} with {lines} lines"
     
     diff = _generate_diff(old_content, content, file_path)
-    return f"Write: {file_path} with {lines} lines\nDiff:\n{diff}"
+    return f"Updated: {file_path} with {lines} lines\nDiff:\n{diff}"
