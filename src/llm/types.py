@@ -21,7 +21,7 @@ class EventType(Enum):
 @dataclass
 class Message:
     role: str
-    content: str
+    content: str | list[ContentBlock] = ""
     
     
 @dataclass
