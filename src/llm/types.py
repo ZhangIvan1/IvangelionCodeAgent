@@ -81,3 +81,6 @@ class LLMProvider(Protocol):
     async def chat(self, messages: list[Message], options: ChatOptions | None = None) -> ChatResponse:
         pass
 
+    async def stream(self, messages: list[Message], options: ChatOptions | None = None) -> AsyncIterator[StreamEvent]:
+        pass
+
