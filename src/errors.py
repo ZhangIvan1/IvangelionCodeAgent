@@ -3,8 +3,7 @@ import random
 from dataclasses import dataclass
 from typing import AsyncIterator, Callable, Awaitable
 
-from llm import LLMProvider, Message, ChatOptions, ChatResponse
-from llm.types import StreamEvent
+from llm.types import StreamEvent, LLMProvider, Message, ChatOptions, ChatResponse
 
 
 def is_retryable(error: Exception) -> bool:
