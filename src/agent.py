@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 from typing import Callable, Awaitable
 
@@ -18,6 +19,7 @@ class AgentConfig:
     execute_tool: ToolExecutor
     max_iterations: int = DEFAULT_MAX_ITERATIONS
     max_tokens: int | None = None
+    parallel_tool_calls: bool = False
     
 @dataclass
 class ToolCallRecord:
@@ -65,21 +67,34 @@ async def run_agent(config: AgentConfig, user_message: str) -> AgentResult:
         uses = extract_tool_uses(response.content)
         messages.append(Message(role="assistant", content=response.content))
         
-        
-        results: list[ContentBlock] = []
-        for use in uses:
-            result = await config.execute_tool(
-                use.name,
-                use.input,
-            )
-            tool_calls.append(
-                ToolCallRecord(
-                    name=use.name,
-                    input=use.input,
-                    result=result,
+        if config.parallel_tool_calls and len(uses) > 1:
+            coros = [config.execute_tool(use.name, use.input) for use in uses]
+            raw_results = await asyncio.gather(*coros)
+            results: list[ContentBlock] = []
+            for use, result in zip(uses, raw_results):
+                tool_calls.append(
+                    ToolCallRecord(
+                        name=use.name,
+                        input=use.input,
+                        result=result,
+                    )
                 )
-            )
-            results.append(create_tool_result(use.id, result))
+                results.append(create_tool_result(use.id, result))
+        else:
+            results: list[ContentBlock] = []
+            for use in uses:
+                result = await config.execute_tool(
+                    use.name,
+                    use.input,
+                )
+                tool_calls.append(
+                    ToolCallRecord(
+                        name=use.name,
+                        input=use.input,
+                        result=result,
+                    )
+                )
+                results.append(create_tool_result(use.id, result))
             
         messages.append(Message(role="user", content=results))
         
