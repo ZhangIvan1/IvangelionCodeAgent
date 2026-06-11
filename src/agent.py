@@ -63,7 +63,7 @@ async def run_agent(config: AgentConfig, user_message: str) -> AgentResult:
             )
         
         uses = extract_tool_uses(response.content)
-        messages.append(Message(role="assitant", content=response.content))
+        messages.append(Message(role="assistant", content=response.content))
         
         
         results: list[ContentBlock] = []
