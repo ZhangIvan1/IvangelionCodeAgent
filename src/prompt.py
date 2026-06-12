@@ -33,16 +33,16 @@ class SystemPromptBuilder:
     
     def build(self) -> str:
         sorted_sections: list[PromptSection] = sorted(self._sections, key=lambda s: s.priority, reverse=True)
-        return "\n\n".join(f"### {s.title}\n\n{s.content}" for s in sorted_sections)
+        return "\n\n".join(f"## {s.title}\n\n{s.content}" for s in sorted_sections)
     
     def build_with_budget(self, max_chars: int) -> str:
         sorted_sections: list[PromptSection] = sorted(self._sections, key=lambda s: s.priority, reverse=True)
         
         prompts: list[str] = []
         prompts_length: int = 0
-        for s in sorted_sections:
-            prompts_part = f"### {s.title}\n\n{s.content}"
-            if prompts_length + len(prompts_part) + 2 > max_chars and prompts_part:
+        for i, s in enumerate(sorted_sections):
+            prompts_part = f"## {s.title}\n\n{s.content}"
+            if prompts_length + len(prompts_part) + 2 > max_chars and prompts:
                 break
             prompts.append(prompts_part)
             prompts_length += len(prompts_part) + 2
