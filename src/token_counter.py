@@ -82,13 +82,13 @@ def estimate_conversation_tokens(
 
 @dataclass
 class ContextBudget:
-    model_context_tokens: int = 64_000
+    max_context_tokens: int = 64_000
     reserved_for_response: int = 4096
     
 DEFAULT_CONTEXT_BUDGET = ContextBudget()
 
 def remaining_budget(budget: ContextBudget, used_tokens: int) -> int:
-    return max(0, budget.model_context_tokens - budget.reserved_for_response - used_tokens)
+    return max(0, budget.max_context_tokens - budget.reserved_for_response - used_tokens)
 
 def is_over_budget(budget: ContextBudget, used_tokens: int) -> bool:
-    return used_tokens >= budget.model_context_tokens - budget.reserved_for_response
+    return used_tokens >= budget.max_context_tokens - budget.reserved_for_response
