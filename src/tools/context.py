@@ -91,13 +91,13 @@ def execute_scratchpad_tool(
         key = input["key"]
         value = input["value"]
         scratchpad.set(key, value)
-        return f"Save: Scratchpad {name} set to {value}"
+        return f"Saved: {key} = {value}"
     elif name == "scratchpad_get":
         key = input["key"]
         return scratchpad.get(key) or f"No entry found for {key}"
     elif name == "scratchpad_list":
         return scratchpad.format() or "Scratchpad is empty."
-    return f"Invalid scratchpad tool: {name}"
+    return f"Unknown scratchpad tool: {name}"
 
 
 def select_messages(messages: list[Message], max_tokens) -> list[Message]:

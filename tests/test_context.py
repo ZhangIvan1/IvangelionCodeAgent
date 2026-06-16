@@ -5,7 +5,7 @@ from tools.context import (
     select_messages,
     detect_context_poisoning,
 )
-from src.llm.types import Message
+from llm.types import Message
 
 
 class TestScratchpad:
