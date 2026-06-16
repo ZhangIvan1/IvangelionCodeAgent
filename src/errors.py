@@ -46,7 +46,7 @@ class RetryProvider:
 
     async def chat(self, messages: list[Message], options: ChatOptions | None = None) -> ChatResponse:
         last_error: Exception | None = None
-        for attempt in range(self._config.max_retries):
+        for attempt in range(self._config.max_retries + 1):
             try:
                 return await self._provider.chat(messages, options)
             except Exception as e:
@@ -60,7 +60,7 @@ class RetryProvider:
 
     async def stream(self, messages: list[Message], options: ChatOptions | None = None) -> AsyncIterator[StreamEvent]:
         last_error: Exception | None = None
-        for attempt in range(self._config.max_retries):
+        for attempt in range(self._config.max_retries + 1):
             try:
                 async for event in self._provider.stream(messages, options):
                     yield event
@@ -84,7 +84,7 @@ def safe_tool_executor(executor: Callable[[str, dict], Awaitable[str]], known_to
         try:
             return await executor(name, input)
         except Exception as e:
-            return f'Error executing tool [{name}]: {e}"'
+            return f'Error executing {name}: {e}'
 
     return wrapped
 
