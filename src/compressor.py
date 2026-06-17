@@ -41,10 +41,10 @@ def _format_content(message: Message) -> str:
 async def summarize_messages(
         provider: LLMProvider,
         messages: list[Message],
-        max_tokens: int,
+        max_tokens: int = 1024,
 ) -> str:
     formatted = "\n\n".join(
-        f"{messages.role}: {_format_content(message)}" for message in messages
+        f"{message.role}: {_format_content(message)}" for message in messages
     )
     
     response = await provider.chat(
