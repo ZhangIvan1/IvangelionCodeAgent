@@ -1,7 +1,10 @@
+import token
 from dataclasses import dataclass
+from unittest import result
 
 from llm import LLMProvider, Message
 from llm.types import TextBlock, ToolUseBlock, ToolResultBlock, ChatOptions
+from token_counter import estimate_conversation_tokens, estimate_message_tokens
 
 
 @dataclass
@@ -64,4 +67,49 @@ async def summarize_messages(
     )
     
     return response.text
+
+async def compress_conversation(
+        config: CompressorConfig,
+        messages: list[Message],
+) -> CompressResult:
+    
+    total_tokens = sum(estimate_message_tokens(message) for message in messages)
+    
+    if total_tokens <= config.max_tokens or len(messages) <= config.keep_recent_messages:
+        return CompressResult(
+            messages=messages,
+            compressed=False,
+            original_count=len(messages),
+            compressed_count=len(messages),
+            summary_tokens=0,
+        )
+    
+    split_index = len(messages) - config.keep_recent_messages
+    old_messages = messages[:split_index]
+    recent_messages = messages[split_index:]
+    
+    summary = await summarize_messages(
+        provider=config.provider,
+        messages=old_messages,
+        max_tokens=config.summary_max_tokens,
+    )
+    
+    summary_message = Message(
+        role="user",
+        content=f"[Previous conversation summary]\n{summary}",
+    )
+    
+    result = [summary_message, *recent_messages]
+    
+    return CompressResult(
+        messages=result,
+        compressed=True,
+        original_count=len(messages),
+        compressed_count=len(result),
+        summary_tokens=estimate_message_tokens(summary_message),
+    )
+
+def needs_compression(messages: list[Message], max_tokens: int) -> bool:
+    total_tokens = sum(estimate_message_tokens(message) for message in messages)
+    return total_tokens > max_tokens
     
