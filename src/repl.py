@@ -45,3 +45,38 @@ def format_help(commands: list[Command], exit_keywords: list[str]) -> str:
         lines.append(f"  {cmd.name:<12} {cmd.description}")
     lines.append(f"  {exit_keywords[0]:<12} Exit the REPL")
     return "\n".join(lines)
+
+
+class Repl:
+    def __init__(self, config: ReplConfig | None = None) -> None:
+        self._config = config or ReplConfig()
+        self._all_commands: list[Command] = _default_commands() + list(self._config.commands)
+        
+        for cmd in self._all_commands:
+            if cmd.name == "/help":
+                cmd.execute = lambda : format_help(
+                    self._all_commands,
+                    self._config.exit_keywords
+                )
+                break
+                
+    async def process_input(self, raw: str) -> str | None:
+        text = normalize_text(raw)
+        if not text:
+            return ""
+        
+        cmd_name = parse_command(text)
+        if cmd_name in self._config.exit_keywords:
+            return None
+        
+        for cmd in self._all_commands:
+            if cmd.name == cmd_name:
+                result = cmd.execute()
+                return result if result is not None else ""
+            
+        if self._config.on_input:
+            return await self._config.on_input(text)
+        
+        return f"Unknown command: {cmd_name}. Type /help for available commands."
+        
+        
