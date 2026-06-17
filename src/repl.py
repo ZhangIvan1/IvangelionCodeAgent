@@ -78,5 +78,23 @@ class Repl:
             return await self._config.on_input(text)
         
         return f"Unknown command: {cmd_name}. Type /help for available commands."
+    
+    async def run(self) -> None:
+        print("AI Coding Agent (type /help for available commands, /exit to quit)\n")
         
-        
+        while True:
+            try:
+                raw_text = input(self._config.prompt)
+            except EOFError:
+                print("Goodbye!")
+                break
+            
+            result = await self.process_input(raw_text)
+            
+            if result is None:
+                print("Goodbye!")
+                break
+            
+            if result:
+                print(result)
+            
