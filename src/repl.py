@@ -6,7 +6,7 @@ from typing import Callable, Awaitable
 def is_multi_line(text: str) -> bool:
     return "\n" in text
 
-def normalize_text(text: str) -> str:
+def normalize_input(text: str) -> str:
     return text.strip()
 
 def parse_command(text: str) -> str:
@@ -61,7 +61,7 @@ class Repl:
                 break
                 
     async def process_input(self, raw: str) -> str | None:
-        text = normalize_text(raw)
+        text = normalize_input(raw)
         if not text:
             return ""
         
