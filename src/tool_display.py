@@ -14,7 +14,7 @@ class Spinner:
     def __init__(self, message: str) -> None:
         self._message = message
         self._frame_index = 0
-        self._running = True
+        self._running = False
         self._thread: threading.Thread | None = None
 
     @property
@@ -48,7 +48,7 @@ class Spinner:
         sys.stderr.write("\r\033[K")
         sys.stderr.flush()
             
-    def success(self, message: str | None = None) -> None:
+    def succeed(self, message: str | None = None) -> None:
         self.stop()
         sys.stderr.write(f"{GREEN}✔{RESET} {message or self._message}\n")
         sys.stderr.flush()
