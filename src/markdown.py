@@ -1,4 +1,5 @@
 import re
+from itertools import count
 
 # ANSI escape codes
 RESET = "\033[0m"
@@ -56,3 +57,58 @@ def render_horizontal_rule() -> str:
     return f"{GRAY}{'─' * 48}{RESET}"
 
 def render_markdown(markdown: str) -> str:
+    lines = markdown.split("\n")
+    output: list[str]= []
+    in_code_block = False
+    code_language: str = ""
+    code_buffer: list[str] = []
+    
+    for line in lines:
+        if line.lstrip().startswith("```"):
+            if in_code_block:
+                output.append(render_code_block("\n".join(code_buffer), code_language))
+                code_buffer = []
+                in_code_block = False
+                code_language = ""
+            else:
+                in_code_block = True
+                code_language = line.lstrip()[3:].strip()
+                
+            if in_code_block:
+                code_buffer.append(line)
+                continue
+
+        stripped = line.strip()
+        if re.match(r"^---+$", stripped) or re.match(r"^\*\*\*+$", stripped):
+            output.append(render_horizontal_rule())
+            continue
+
+        heading_match = re.match(r"^(#{1,3})\s+(.+)", line)
+        if heading_match:
+            output.append(render_heading(heading_match.group(2), len(heading_match.group(1))))
+            continue
+
+        list_match = re.match(r"^(\s*)[*-]\s+(.+)", line)
+        if list_match:
+            output.append(render_list_item(list_match.group(2), len(list_match.group(1))))
+            continue
+
+        ordered_match = re.match(r"^(\s*)\d+\.\s+(.+)", line)
+        if ordered_match:
+            output.append(render_list_item(ordered_match.group(2), len(ordered_match.group(1))))
+            continue
+            
+        if stripped == "":
+            output.append("")
+            continue
+            
+        output.append(render_inline(line))
+        
+    if in_code_block and code_buffer:
+        output.append(render_code_block("\n".join(code_buffer), code_language))
+        
+    return "\n".join(output)
+
+
+def strip_ansi(text: str) -> str:
+    return re.sub(r"\033\[[0-9;]*[a-zA-Z]", "", text)
