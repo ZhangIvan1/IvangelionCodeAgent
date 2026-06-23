@@ -1,5 +1,6 @@
 import os.path
 import re
+from dataclasses import dataclass
 
 from pip._internal.resolution.resolvelib import candidates
 
@@ -69,3 +70,37 @@ def read_project_config(project_dir: str) -> str | None:
         except FileNotFoundError:
             continue
     return None
+
+@dataclass
+class GitInfo:
+    branch: str
+    last_commit: str
+    status: str
+    remote_url: str
+    
+def parse_git_info(
+    branch: str = "",
+    last_commit: str = "",
+    status: str = "",
+    remote_url: str = "",
+) -> GitInfo:
+    return GitInfo(
+        branch=branch,
+        last_commit=last_commit,
+        status=status,
+        remote_url=remote_url,
+    )
+
+def format_git_context(info: GitInfo) -> str:
+    lines = ["## Project Context"]
+    
+    if info.branch:
+        lines.append(f"  - Branch: {info.branch}")
+    if info.last_commit:
+        lines.append(f"  - Last Commit: {info.last_commit}")
+    if info.status:
+        lines.append(f"  - Status: {info.status}")
+    if info.remote_url:
+        lines.append(f"  - Remote URL: {info.remote_url}")
+        
+    return "\n".join(lines) if len(lines) > 1 else ""
