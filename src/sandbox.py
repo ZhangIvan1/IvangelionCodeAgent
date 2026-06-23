@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pip._internal.resolution.resolvelib import candidates
 
 
-class FileSystemSandBox:
+class FileSystemSandbox:
     DEFAULT_BLOCKED = [
         re.compile(r"\.env($|\.)"),        
         re.compile(r"/(\.ssh|\.gnupg)/"),    
