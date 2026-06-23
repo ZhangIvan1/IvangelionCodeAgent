@@ -1,6 +1,8 @@
 import os.path
 import re
 
+from pip._internal.resolution.resolvelib import candidates
+
 
 class FileSystemSandBox:
     DEFAULT_BLOCKED = [
@@ -56,3 +58,14 @@ def check_dangerous_command(command: str) -> str | None:
             return message
     return None
 
+def read_project_config(project_dir: str) -> str | None:
+    candidates = ["CLAUDE.md", os.path.join(".claude", "CLAUDE.md")]
+    
+    for candidate in candidates:
+        path = os.path.join(project_dir, candidate)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            continue
+    return None
